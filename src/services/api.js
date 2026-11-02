@@ -4,13 +4,22 @@
  * Strict Server-Side Session and Database driven. NO localStorage / sessionStorage.
  */
 
-const API_BASE = '/api';
+// Static host (klef.acm.org): VITE_API_BASE points at the backend on Vercel. Unset = same origin.
+const API_ORIGIN = (import.meta.env.VITE_API_BASE || '').replace(/\/+$/, '');
+const API_BASE = `${API_ORIGIN}/api`;
 const CLIENT_CACHE_KEY = 'klu_acm_client_public_cache_v2';
 let clientMemoryCache = null;
 
 /**
  * Helper to handle fetch responses and extract JSON/errors cleanly
  */
+// The API returns inline images as relative /api/media/... links; make them absolute on a static host.
+// Admin always runs on the backend's own origin (API_ORIGIN empty), so stored links are never rewritten.
+function resolveMediaLinks(data) {
+  if (!API_ORIGIN) return data;
+  return JSON.parse(JSON.stringify(data).replaceAll('"/api/media/', `"${API_ORIGIN}/api/media/`));
+}
+
 async function handleResponse(response) {
   let data;
   const contentType = response.headers.get('content-type');
@@ -95,7 +104,7 @@ export const api = {
     let url = `${API_BASE}/public-data?type=${type}`;
     if (slug) url += `&slug=${slug}`;
     const res = await fetch(url);
-    const data = await handleResponse(res);
+    const data = resolveMediaLinks(await handleResponse(res));
     if (type === 'all' && data) {
       this.setCachedPublicData(data);
     }

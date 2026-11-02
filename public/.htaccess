@@ -1,0 +1,26 @@
+Options -Indexes
+DirectoryIndex index.html
+
+RewriteEngine On
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Canonical host: hosting4 alias -> klef.acm.org
+RewriteCond %{HTTP_HOST} ^klef\.hosting4\.acm\.org$ [NC]
+RewriteRule ^ https://klef.acm.org%{REQUEST_URI} [L,R=301]
+# Admin stays on Vercel (session cookie lives there)
+RewriteRule ^admin https://klef-acm.vercel.app/Admin [NC,L,R=302]
+# SPA fallback: any path that isn't a real file or folder
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

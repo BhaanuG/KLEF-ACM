@@ -25,7 +25,6 @@ import {
 import { useVisualEditor } from '../../context/VisualEditorContext';
 import { AuthContext, SiteDataContext } from '../../App';
 import { api } from '../../services/api';
-import { LaunchModeToggle } from '../LaunchGate'; // TEMPORARY launch mode
 
 export default function VisualAdminHeader({ currentSection, isEditMode }) {
   const { 
@@ -163,7 +162,6 @@ export default function VisualAdminHeader({ currentSection, isEditMode }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {!isEditMode ? (
             <>
-              <LaunchModeToggle />
               <Link
                 to={activePageObj.editPath}
                 className="btn btn-primary"

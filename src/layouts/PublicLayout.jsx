@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Loader from '../components/Loader';
-import LaunchGate from '../components/LaunchGate'; // TEMPORARY launch mode
 import ErrorBoundary from '../components/ErrorBoundary';
 import { SiteDataContext } from '../App';
 
@@ -71,7 +70,6 @@ export default function PublicLayout() {
     // Check if on specific member bio/profile detail route
     const isMemberBioPage = /^\/members\/.+/i.test(location.pathname);
     return (
-      <LaunchGate>
       <div className="theme-dark" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Loading screen: once per full page load */}
         <Loader />
@@ -99,6 +97,5 @@ export default function PublicLayout() {
         </main>
         {!isMemberBioPage && <Footer contact={siteData?.contact || {}} />}
       </div>
-      </LaunchGate>
     );
   }

@@ -37,3 +37,4 @@ raw-assets/
 
 # Launch/social videos (large renders)
 brag-output/
+.env.ftp

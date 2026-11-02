@@ -45,11 +45,11 @@ Andhra Pradesh, India – 522302`;
       setStatusMsg(res.message || 'Inquiry sent successfully! A confirmation copy has been sent to your email.');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
-      console.warn('Contact API error (fallback simulated):', err.message);
+      // Keep what they typed so they can retry; never claim a failed send succeeded
+      console.warn('Contact API error:', err.message);
       setLoading(false);
-      setSubmitted(true);
-      setStatusMsg('Thank you for reaching out. Your enquiry has been received and our team will get in touch shortly.');
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      const fallback = email ? ` You can also email us at ${email}.` : '';
+      setErrorMsg(`${err.status ? err.message : 'Your message could not be sent. Please check your connection and try again.'}${fallback}`);
     }
   };
 

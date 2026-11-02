@@ -100,6 +100,10 @@ export function invalidatePublicCache() {
   publicDataCache.timestamp = 0;
 }
 
+const PUBLIC_CORS_PATHS = /^\/(public-data|me|media\/)/;
+const isCorsOriginAllowed = (origin) => origin === 'https://klef.acm.org'
+  || (process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin || ''));
+
 // ponytail: in-memory login limiter — per server instance (resets on cold start); move to the
 // DB if serverless instances ever need to share it.
 const LOGIN_MAX_FAILS = 5;
@@ -121,6 +125,25 @@ function clearLoginFailures(keys) { for (const k of keys) loginFails.delete(k); 
 
 export function createApiRouter() {
   const router = express.Router();
+
+  // CORS for the static site: its public GET endpoints and the contact form, no credentials.
+  router.use((req, res, next) => {
+    const isPublicGet = (req.method === 'GET' || req.method === 'HEAD') && PUBLIC_CORS_PATHS.test(req.path);
+    const isContact = req.path === '/contact' && (req.method === 'POST' || req.method === 'OPTIONS');
+    if (isPublicGet || isContact) {
+      res.vary('Origin');
+      if (isCorsOriginAllowed(req.headers.origin)) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+        if (req.method === 'OPTIONS') {
+          res.setHeader('Access-Control-Allow-Methods', 'POST');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          res.setHeader('Access-Control-Max-Age', '86400');
+          return res.status(204).end();
+        }
+      }
+    }
+    next();
+  });
   router.use(express.json({ limit: '50mb' }));
   router.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -592,32 +615,6 @@ export function createApiRouter() {
   // ---------------------------------------------------------------------------
   // 6. OBJECT STORAGE MEDIA UPLOAD (Authenticated)
   // ---------------------------------------------------------------------------
-  // ---------------------------------------------------------------------------
-  // WEBSITE LAUNCH MODE (temporary — remove after launch day, see src/launchMode.js)
-  // GET: anyone can read whether the site is live. POST: admin flips it ({ launched: true|false }).
-  // ---------------------------------------------------------------------------
-  router.get('/launch', async (req, res) => {
-    res.setHeader('Cache-Control', 'no-store');
-    if (!supabase) return res.json({ launched: true });
-    try {
-      const { data } = await supabase.from('site_settings').select('value').eq('key', 'launch').maybeSingle();
-      return res.json({ launched: Boolean(data?.value?.launched), launchedAt: data?.value?.at || null });
-    } catch {
-      return res.json({ launched: true }); // never lock visitors out because of a DB hiccup
-    }
-  });
-
-  router.post('/launch', async (req, res) => {
-    const session = verifyAdminSession(req);
-    if (!session) return res.status(401).json({ error: 'Only an admin can launch the website.' });
-    if (!supabase) return res.status(503).json({ error: 'Database unconfigured' });
-    const launched = req.body?.launched !== false;
-    const value = { launched, at: launched ? new Date().toISOString() : null, by: session.username };
-    const { error } = await supabase.from('site_settings').upsert({ key: 'launch', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ launched, launchedAt: value.at });
-  });
-
   // Serves one image that is still stored inline (base64) in a row — see server/inlineMedia.js
   router.get('/media/:table/:key/:field', async (req, res) => {
     try {
@@ -794,6 +791,11 @@ export function createApiRouter() {
         }
       }
 
+      // The message isn't stored anywhere else, so never report success if the email failed
+      if (!mailSent) {
+        return res.status(502).json({ error: 'Your message could not be sent. Please try again in a little while.' });
+      }
+
       // Record in database audit logs
       if (supabase) {
         supabase.from('audit_logs').insert({
@@ -805,9 +807,7 @@ export function createApiRouter() {
 
       return res.json({ 
         success: true, 
-        message: mailSent 
-          ? 'Your inquiry has been submitted and confirmation emails have been sent.' 
-          : 'Thank you for reaching out. Your enquiry has been received and our team will get in touch shortly.' 
+        message: 'Your inquiry has been submitted and confirmation emails have been sent.',
       });
     } catch (err) {
       console.error('Contact error:', err);
