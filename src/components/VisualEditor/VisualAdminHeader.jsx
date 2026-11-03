@@ -63,6 +63,7 @@ export default function VisualAdminHeader({ currentSection, isEditMode }) {
     { slug: 'Gallery', label: 'Gallery', path: '/Admin/Gallery', editPath: '/Admin/Gallery/Edit' },
     { slug: 'Members', label: 'Members', path: '/Admin/Members', editPath: '/Admin/Members/Edit' },
     { slug: 'Contact', label: 'Contact', path: '/Admin/Contact', editPath: '/Admin/Contact/Edit' },
+    { slug: 'Inbox', label: 'Inbox', path: '/Admin/Inbox', editPath: '/Admin/Inbox' },
   ];
 
   const activePageObj = pages.find(p => p.slug.toLowerCase() === currentSection.toLowerCase()) || pages[0];
@@ -162,7 +163,7 @@ export default function VisualAdminHeader({ currentSection, isEditMode }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {!isEditMode ? (
             <>
-              <Link
+              {activePageObj.slug !== 'Inbox' && <Link
                 to={activePageObj.editPath}
                 className="btn btn-primary"
                 style={{
@@ -179,10 +180,10 @@ export default function VisualAdminHeader({ currentSection, isEditMode }) {
               >
                 <Edit3 size={15} />
                 <span>Edit Page</span>
-              </Link>
+              </Link>}
 
               <Link
-                to={`/${activePageObj.slug === 'Home' ? '' : activePageObj.slug}`}
+                to={`/${['Home', 'Inbox'].includes(activePageObj.slug) ? (activePageObj.slug === 'Inbox' ? 'Join' : '') : activePageObj.slug}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{

@@ -13,6 +13,7 @@ import Events from '../pages/Events';
 import Gallery from '../pages/Gallery';
 import Members from '../pages/Members';
 import Contact from '../pages/Contact';
+import AdminInbox from '../pages/AdminInbox';
 
 export default function VisualAdminLayout({ page: propPage, editMode: propEditMode }) {
   const { auth } = useContext(AuthContext);
@@ -86,6 +87,8 @@ export default function VisualAdminLayout({ page: propPage, editMode: propEditMo
         return <Gallery isVisualAdmin={true} isEditMode={isEditMode} />;
       case 'members':
         return <Members isVisualAdmin={true} isEditMode={isEditMode} />;
+      case 'inbox':
+        return <AdminInbox />;
       case 'contact':
         return <Contact isVisualAdmin={true} isEditMode={isEditMode} />;
       default:

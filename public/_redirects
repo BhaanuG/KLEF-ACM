@@ -1,4 +1,0 @@
-/api/*          /.netlify/functions/:splat  200
-/KLEF-ACM-SC/*  /:splat                     301
-/KLEF-ACM-SC    /                           301
-/*              /index.html                 200

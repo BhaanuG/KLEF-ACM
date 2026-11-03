@@ -38,7 +38,7 @@ export default function Header() {
               {item.label}
             </NavLink>
           ))}
-          <Link to="/Contact" className="btn btn-red nav-cta">Join the Chapter</Link>
+          <Link to="/Join" className="btn btn-red nav-cta">Join the Chapter</Link>
         </nav>
 
         {/* Mobile Menu Toggle Button */}
@@ -66,7 +66,7 @@ export default function Header() {
           flexDirection: 'column',
           padding: mobileMenuOpen ? '20px 24px' : '0 24px',
           gap: '14px',
-          maxHeight: mobileMenuOpen ? '420px' : '0px',
+          maxHeight: mobileMenuOpen ? '500px' : '0px',
           opacity: mobileMenuOpen ? 1 : 0,
           overflow: 'hidden',
           transition: 'max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, padding 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -91,6 +91,7 @@ export default function Header() {
             {item.label}
           </NavLink>
         ))}
+        <Link to="/Join" className="btn btn-red" style={{ justifyContent: 'center' }} onClick={() => setMobileMenuOpen(false)}>Join the Chapter</Link>
       </div>
     </header>
   );

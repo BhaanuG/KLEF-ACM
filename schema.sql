@@ -339,17 +339,7 @@ ALTER TABLE gallery_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE captcha_challenges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Allow all operations for API and public clients
-CREATE POLICY "Allow All Events" ON events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Members" ON members FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Pages" ON pages FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Albums" ON gallery_albums FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Gallery" ON gallery_images FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Contact" ON contact_settings FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Site Settings" ON site_settings FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Captcha" ON captcha_challenges FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Audit" ON audit_logs FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow All Admin" ON admin_users FOR ALL USING (true) WITH CHECK (true);
+-- Public access rules live in supabase/001_lockdown_and_forms.sql (run it after this file).
 
 --------------------------------------------------------------------------------
 -- 12. Storage Bucket Creation & Permissions
@@ -359,6 +349,3 @@ VALUES ('acm-media', 'acm-media', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
 CREATE POLICY "Public Read Media" ON storage.objects FOR SELECT USING (bucket_id = 'acm-media');
-CREATE POLICY "Public Upload Media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'acm-media');
-CREATE POLICY "Public Update Media" ON storage.objects FOR UPDATE USING (bucket_id = 'acm-media');
-CREATE POLICY "Public Delete Media" ON storage.objects FOR DELETE USING (bucket_id = 'acm-media');

@@ -123,6 +123,18 @@ export const api = {
     return handleResponse(res);
   },
 
+  /**
+   * Submits a "Join the chapter" application
+   */
+  async submitJoinApplication(formData) {
+    const res = await fetch(`${API_BASE}/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    return handleResponse(res);
+  },
+
   // ---------------------------------------------------------------------------
   // AUTHENTICATION (Server-Controlled HttpOnly Cookies)
   // ---------------------------------------------------------------------------

@@ -46,6 +46,7 @@ export default function Footer({ contact = {} }) {
               <li><Link to="/About-ACM" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.18s' }}>About ACM</Link></li>
               <li><Link to="/About-KLEF-ACM" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.18s' }}>About KLEF ACM</Link></li>
               <li><Link to="/Contact" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.18s' }}>Contact</Link></li>
+              <li><Link to="/Join" style={{ color: '#475569', textDecoration: 'none', transition: 'color 0.18s' }}>Join the Chapter</Link></li>
             </ul>
           </div>
 

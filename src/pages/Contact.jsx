@@ -189,9 +189,6 @@ Andhra Pradesh, India – 522302`;
                     <p style={{ fontSize: '0.92rem', color: 'var(--slate-600)', margin: 0, lineHeight: '1.6', maxWidth: '420px' }}>
                       {statusMsg}
                     </p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--slate-400)', marginTop: '8px' }}>
-                      An automated confirmation receipt has also been dispatched to your email address.
-                    </p>
                   </div>
                   <button onClick={() => setSubmitted(false)} className="btn btn-secondary btn-sm" style={{ marginTop: '8px' }}>
                     Send Another Enquiry
@@ -199,6 +196,9 @@ Andhra Pradesh, India – 522302`;
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
+                  {/* Honeypot: hidden from people, bots fill it in */}
+                  <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}
+                    value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
                   {errorMsg && (
                     <div style={{ padding: '12px 16px', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '4px', color: '#991B1B', fontSize: '0.88rem', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <AlertCircle size={16} />

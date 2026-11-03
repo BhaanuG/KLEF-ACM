@@ -19,6 +19,7 @@ import Members from './pages/Members';
 import AboutAcm from './pages/AboutAcm';
 import AboutKlefAcm from './pages/AboutKlefAcm';
 import Contact from './pages/Contact';
+import Join from './pages/Join';
 import AdminLogin from './pages/AdminLogin';
 
 // Context Definitions
@@ -149,6 +150,8 @@ export default function App() {
               <Route path="/about-klu-acm" element={<Navigate to="/About-KLEF-ACM" replace />} />
               
               <Route path="/Contact" element={<Contact />} />
+              <Route path="/Join" element={<Join />} />
+              <Route path="/join" element={<Navigate to="/Join" replace />} />
               <Route path="/contact" element={<Navigate to="/Contact" replace />} />
             </Route>
 

@@ -1165,3 +1165,30 @@ body:has(.theme-dark) { background: #0C0D0F; color-scheme: dark; }
 .member-group-head h2 { grid-column: 1; font-size: clamp(1.8rem, 3.6vw, 3rem); font-weight: 800; letter-spacing: -0.04em; text-transform: uppercase; line-height: 1; margin: 0; }
 .member-group-head .member-group-count { grid-column: 2; grid-row: 1 / span 2; font-size: clamp(2rem, 4vw, 3.4rem) !important; color: rgba(255, 255, 255, 0.18) !important; letter-spacing: -0.04em !important; }
 
+
+/* ---------- Join form ---------- */
+.join-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+@media (max-width: 640px) { .join-grid { grid-template-columns: 1fr; } }
+.join-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.join-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2); font-size: .88rem; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.join-chip input { accent-color: var(--kl-red); margin: 0; }
+.join-chip.on { background: rgba(211, 42, 56, 0.16); border-color: #FF5A62; }
+.join-chip:focus-within { outline: 2px solid var(--acm-blue); outline-offset: 2px; }
+.theme-dark select.form-control option { background: #141518; color: #F2F2EF; }
+
+/* ---------- Admin inbox (admin is light) ---------- */
+.inbox-tab { display: inline-flex; gap: 8px; align-items: center; padding: 8px 14px; border-radius: 8px; border: 1px solid #CBD5E1; background: #fff; color: #0F172A; font-weight: 600; font-size: .88rem; cursor: pointer; }
+.inbox-tab[aria-pressed="true"] { background: #0F172A; color: #fff; border-color: #0F172A; }
+.inbox-tab b { background: #D32A38; color: #fff; border-radius: 999px; padding: 0 8px; font-size: .76rem; }
+.inbox-error { padding: 12px 16px; border-radius: 8px; background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; font-size: .92rem; }
+.inbox-row { background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; color: #0F172A; overflow: hidden; }
+.inbox-head { display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px 16px; background: none; border: none; cursor: pointer; text-align: left; color: inherit; flex-wrap: wrap; }
+.inbox-sub { color: #64748B; font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+.inbox-date { color: #64748B; font-size: .82rem; }
+.inbox-status { font-size: .72rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: #E2E8F0; color: #334155; }
+.inbox-status.s-new { background: #FCE7E9; color: #A8202A; }
+.inbox-status.s-accepted, .inbox-status.s-replied { background: #DCFCE7; color: #166534; }
+.inbox-body { padding: 4px 16px 16px; border-top: 1px solid #E2E8F0; font-size: .93rem; color: #0F172A; }
+.inbox-body p { margin: 8px 0 0; color: #0F172A; }
+.inbox-body a { color: #0077B6; }
+.inbox-del { padding: 6px 12px; border-radius: 6px; border: 1px solid #FECACA; background: #FEF2F2; color: #B91C1C; font-weight: 600; font-size: .82rem; cursor: pointer; margin-left: auto; }

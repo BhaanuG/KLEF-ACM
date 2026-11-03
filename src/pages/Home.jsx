@@ -397,7 +397,7 @@ export default function Home() {
               style={{ maxWidth: '520px', color: 'var(--muted)', marginBottom: '28px' }}
             />
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link to="/Contact" className="pill-btn">Join the chapter →</Link>
+              <Link to="/Join" className="pill-btn">Join the chapter →</Link>
               <Link to="/About-KLEF-ACM" className="pill-btn ghost">About us</Link>
             </div>
           </Fade>

@@ -31,6 +31,9 @@ export default function PublicLayout() {
     } else if (path.endsWith('/about-klef-acm') || path.includes('/About-KLEF-ACM') || path.includes('/About-KLU-ACM')) {
       title = 'KLEF ACM — About KLEF ACM';
       description = 'About the KLEF ACM Student Chapter at Koneru Lakshmaiah Education Foundation (Deemed to be University).';
+    } else if (/\/join/i.test(path)) {
+      title = 'KLEF ACM — Join the Chapter';
+      description = 'Apply to join the KLEF ACM Student Chapter at KL Deemed to be University.';
     } else if (path.endsWith('/contact') || path.includes('/Contact')) {
       title = 'KLEF ACM — Contact';
       description = 'Get in touch with the KLEF ACM Student Chapter representatives and coordinators.';

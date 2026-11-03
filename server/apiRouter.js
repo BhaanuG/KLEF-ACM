@@ -2,9 +2,9 @@ import express from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { createFormHandler, clientIp } from './forms.js';
 import { offloadPayload, offloadRows, loadInlineMedia, fetchMembersLight, restoreMediaRefs, MEDIA_CACHE_HEADER } from './inlineMedia.js';
 
 dotenv.config();
@@ -66,7 +66,9 @@ export function serializeCookie(name, val, options = {}) {
 // Initialize Privileged Server-Side Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-const sessionSecret = process.env.SESSION_SECRET || 'klu_acm_portal_secure_jwt_session_secret_2026';
+// No shared default: a secret written in public code would let anyone forge an admin session.
+// ponytail: random per-instance fallback keeps login safe but drops sessions on restart; set SESSION_SECRET.
+const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 export const supabase = (supabaseUrl && supabaseServiceKey) 
   ? createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
@@ -126,10 +128,10 @@ function clearLoginFailures(keys) { for (const k of keys) loginFails.delete(k); 
 export function createApiRouter() {
   const router = express.Router();
 
-  // CORS for the static site: its public GET endpoints and the contact form, no credentials.
+  // CORS for the static site: its public GET endpoints and the public forms, no credentials.
   router.use((req, res, next) => {
     const isPublicGet = (req.method === 'GET' || req.method === 'HEAD') && PUBLIC_CORS_PATHS.test(req.path);
-    const isContact = req.path === '/contact' && (req.method === 'POST' || req.method === 'OPTIONS');
+    const isContact = (req.path === '/contact' || req.path === '/apply') && (req.method === 'POST' || req.method === 'OPTIONS');
     if (isPublicGet || isContact) {
       res.vary('Origin');
       if (isCorsOriginAllowed(req.headers.origin)) {
@@ -320,7 +322,7 @@ export function createApiRouter() {
       const cleanPassword = String(password).trim();
 
       // Brute-force guard (replaces the old CAPTCHA)
-      const limitKeys = [`ip:${req.ip}`, `user:${cleanUsername.toLowerCase()}`];
+      const limitKeys = [`ip:${clientIp(req)}`, `user:${cleanUsername.toLowerCase()}`];
       const lockedFor = loginLockRemaining(limitKeys);
       if (lockedFor) {
         return res.status(429).json({ error: `Too many failed attempts. Try again in ${Math.ceil(lockedFor / 60000)} minute(s).` });
@@ -439,6 +441,7 @@ export function createApiRouter() {
     'site_settings',
     'contact_settings',
     'audit_logs',
+    'form_submissions',
   ];
 
   router.use('/admin-crud', (req, res, next) => {
@@ -464,6 +467,7 @@ export function createApiRouter() {
       else if (table === 'events') query = query.order('date', { ascending: false });
       else if (table === 'gallery_images') query = query.order('created_at', { ascending: false });
       else if (table === 'pages') query = query.order('slug', { ascending: true });
+      else if (table === 'form_submissions') query = query.order('created_at', { ascending: false }).limit(1000);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -623,6 +627,8 @@ export function createApiRouter() {
       if (media.redirect) return res.redirect(302, media.redirect);
       res.setHeader('Content-Type', media.type);
       res.setHeader('Cache-Control', MEDIA_CACHE_HEADER);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox"); // SVGs can't run scripts
       return res.send(media.buffer);
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -702,118 +708,8 @@ export function createApiRouter() {
   // ---------------------------------------------------------------------------
   // 7. CONTACT ENQUIRY & AUTOMATED SMTP DISPATCH
   // ---------------------------------------------------------------------------
-  router.post('/contact', async (req, res) => {
-    try {
-      const { name, email, subject, message } = req.body || {};
-      if (!name || !email || !message) {
-        return res.status(400).json({ error: 'Name, email, and message are required fields.' });
-      }
-
-      const smtpUser = process.env.SMTP_USER || process.env.ADMIN_EMAIL || 'Bhaanugali@gmail.com';
-      const rawSmtpPass = process.env.SMTP_PASS || '';
-      const smtpPass = rawSmtpPass.replace(/\s+/g, '');
-      if (!smtpPass) return res.status(503).json({ error: 'Email is not configured on the server (SMTP_PASS missing).' });
-      const adminRecipient = process.env.ADMIN_EMAIL || 'Bhaanugali@gmail.com';
-
-      // Robust transporter factory: Port 587 STARTTLS as default (bypasses ISP/firewall blocks on 465)
-      const createTransporter = (port = 587, secure = false) => {
-        return nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: port,
-          secure: secure,
-          auth: { user: smtpUser, pass: smtpPass },
-          tls: { rejectUnauthorized: false },
-          connectionTimeout: 9000,
-        });
-      };
-
-      const emailSubject = subject ? `[KLEF ACM Enquiry] ${subject}` : `[KLEF ACM Enquiry] New message from ${name}`;
-
-      // 1. Admin Notification Email
-      const adminMailOptions = {
-        from: `"KLEF ACM Website Enquiry" <${smtpUser}>`,
-        to: adminRecipient,
-        replyTo: email,
-        subject: emailSubject,
-        text: `New Enquiry Received:\nName: ${name}\nEmail: ${email}\nSubject: ${subject || 'None'}\nMessage:\n${message}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <div style="background-color: #005CA9; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-              <h2 style="color: #ffffff; margin: 0; font-size: 1.2rem;">KLEF ACM — New Contact Enquiry</h2>
-            </div>
-            <p><strong>Sender:</strong> ${name} (<a href="mailto:${email}">${email}</a>)</p>
-            <p><strong>Subject:</strong> ${subject || 'General Enquiry'}</p>
-            <p><strong>Message:</strong></p>
-            <div style="background: #f8fafc; padding: 14px; border-left: 4px solid #005CA9; white-space: pre-wrap; font-size: 14px;">${message}</div>
-            <p style="font-size: 12px; color: #64748b; margin-top: 20px;">You can directly reply to this email to respond to ${name}.</p>
-          </div>
-        `,
-      };
-
-      // 2. User Confirmation Email
-      const userMailOptions = {
-        from: `"KLEF ACM Student Chapter" <${smtpUser}>`,
-        to: email,
-        subject: `Confirmation: We received your enquiry — KLEF ACM Student Chapter`,
-        text: `Dear ${name},\n\nThank you for contacting the KLEF ACM Student Chapter. We have received your inquiry regarding "${subject || 'General Enquiry'}".\n\nOur team will review your message and reply shortly.\n\nWarm regards,\nKLEF ACM Student Chapter\nKL Deemed to be University`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <div style="background-color: #005CA9; padding: 18px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #ffffff; margin: 0;">KLEF ACM Student Chapter</h2>
-            </div>
-            <p>Dear <strong>${name}</strong>,</p>
-            <p>Thank you for reaching out. We have successfully received your inquiry regarding <strong>${subject || 'General Enquiry'}</strong> and our team will get back to you shortly.</p>
-            <div style="background: #f1f5f9; padding: 14px; border-radius: 6px; margin: 16px 0;">
-              <p><strong>Your Message:</strong></p>
-              <p style="font-style: italic; white-space: pre-wrap;">${message}</p>
-            </div>
-            <p style="font-size: 13px; color: #64748b;">Department of Computer Science & Engineering<br>KLEF (Deemed to be University), Vaddeswaram, AP</p>
-          </div>
-        `,
-      };
-
-      // Dispatch with automatic fallback
-      let mailSent = false;
-      try {
-        const transporter = createTransporter(587, false);
-        await transporter.sendMail(adminMailOptions);
-        transporter.sendMail(userMailOptions).catch(err => console.warn('[User Confirm Mail Warning]:', err.message));
-        mailSent = true;
-      } catch (err587) {
-        console.warn('[Port 587 Failed, trying Port 465 fallback]:', err587.message);
-        try {
-          const transporter465 = createTransporter(465, true);
-          await transporter465.sendMail(adminMailOptions);
-          transporter465.sendMail(userMailOptions).catch(() => {});
-          mailSent = true;
-        } catch (err465) {
-          console.error('[SMTP All Ports Failed]:', err465.message);
-        }
-      }
-
-      // The message isn't stored anywhere else, so never report success if the email failed
-      if (!mailSent) {
-        return res.status(502).json({ error: 'Your message could not be sent. Please try again in a little while.' });
-      }
-
-      // Record in database audit logs
-      if (supabase) {
-        supabase.from('audit_logs').insert({
-          action: 'contact_submission',
-          resource: 'contact',
-          details: `Enquiry from ${name} (${email}): ${subject || 'No Subject'}`,
-        }).then(() => {}).catch(() => {});
-      }
-
-      return res.json({ 
-        success: true, 
-        message: 'Your inquiry has been submitted and confirmation emails have been sent.',
-      });
-    } catch (err) {
-      console.error('Contact error:', err);
-      return res.status(500).json({ error: 'Failed to process inquiry: ' + err.message });
-    }
-  });
+  router.post('/contact', createFormHandler('contact', supabase));
+  router.post('/apply', createFormHandler('join', supabase));
 
   return router;
 }
