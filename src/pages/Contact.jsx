@@ -84,7 +84,7 @@ Andhra Pradesh, India – 522302`;
 
       {/* Main Grid */}
       <section className="section" style={{ padding: '64px 0' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '56px' }} className="contact-grid">
+        <div className="container contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '56px' }}>
           
           {/* Column 1: Info & Campus Desk */}
           <ScrollReveal delay={0} duration={600}>
