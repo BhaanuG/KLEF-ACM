@@ -130,7 +130,7 @@ Andhra Pradesh, India – 522302`;
                       <VisualEditable
                         name="phone"
                         as="div"
-                        defaultValue={phone || '+91 86323 99999'}
+                        defaultValue={phone}
                         style={{ fontSize: '0.92rem', color: 'var(--navy-900)', fontWeight: '500' }}
                       />
                     </div>

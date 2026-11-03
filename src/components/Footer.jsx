@@ -26,10 +26,10 @@ export default function Footer({ contact = {} }) {
               Association for Computing Machinery
             </p>
             <p style={{ fontSize: '0.85rem', lineHeight: '1.65', color: '#475569' }}>
-              Koneru Lakshmaiah Education Foundation (Deemed to be University)<br />
-              Green Fields, Vaddeswaram<br />
-              Guntur District, Andhra Pradesh – 522302<br />
-              India
+              KLEF Deemed to be University,<br />
+              Green Fields, Vaddeswaram,<br />
+              Guntur District, A.P., INDIA.<br />
+              Pincode : 522 302.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export default function Footer({ contact = {} }) {
                   {phone && (
                     <div>
                       <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748B', marginBottom: '2px' }}>Phone</span>
-                      <a href={`tel:${phone}`} style={{ color: '#0F172A', textDecoration: 'none' }}>{phone}</a>
+                      <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} style={{ color: '#0F172A', textDecoration: 'none' }}>{phone}</a>
                     </div>
                   )}
                   {hasSocials && (
